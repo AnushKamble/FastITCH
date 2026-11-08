@@ -1,0 +1,54 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "debug-asan",
+      "displayName": "Debug with AddressSanitizer and UndefinedBehaviorSanitizer",
+      "description": "Debug build with ASan and UBSan flags enabled",
+      "binaryDir": "${sourceDir}/build_debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_SANITIZERS": "ON",
+        "BUILD_TESTING": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release Optimized Build",
+      "description": "Release build with -O3 optimization",
+      "binaryDir": "${sourceDir}/build_release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "ENABLE_SANITIZERS": "OFF",
+        "BUILD_TESTING": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug-asan",
+      "configurePreset": "debug-asan"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "debug-asan",
+      "configurePreset": "debug-asan",
+      "output": {"outputOnFailure": true}
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "output": {"outputOnFailure": true}
+    }
+  ]
+}

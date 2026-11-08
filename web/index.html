@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastITCH [QD-02] — NASDAQ TotalView-ITCH 5.0 Market Data Terminal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- App Header -->
+    <header class="app-header">
+        <div class="brand-section">
+            <div class="brand-title">
+                <span>FastITCH</span>
+                <span class="brand-badge">QD-02</span>
+            </div>
+            <div class="protocol-tag">NASDAQ TotalView-ITCH 5.0</div>
+            <div class="protocol-tag">MoldUDP64 / BinaryFILE</div>
+        </div>
+        <div class="controls-section">
+            <select id="select-feed" class="input-select">
+                <option value="synthetic_session.bin">Feed: synthetic_session.bin (BinaryFILE)</option>
+                <option value="synthetic_moldudp64.pcap">Feed: synthetic_moldudp64.pcap (MoldUDP64)</option>
+                <option value="synthetic_gap.pcap">Feed: synthetic_gap.pcap (Gap Invalidation Test)</option>
+                <option value="custom">Feed: Upload Local .bin / .pcap...</option>
+            </select>
+            <input type="file" id="file-input" style="display: none;" accept=".bin,.dat,.pcap">
+
+            <select id="select-speed" class="input-select">
+                <option value="500">Speed: 2 msgs/sec (500ms)</option>
+                <option value="200" selected>Speed: 5 msgs/sec (200ms)</option>
+                <option value="50">Speed: 20 msgs/sec (50ms)</option>
+                <option value="10">Speed: 100 msgs/sec (10ms)</option>
+                <option value="1">Speed: Max Throughput (1ms)</option>
+            </select>
+
+            <button id="btn-play" class="btn btn-primary" title="Start Replay">▶ Play</button>
+            <button id="btn-pause" class="btn" title="Pause Replay">⏸ Pause</button>
+            <button id="btn-step" class="btn" title="Step Next Message">⏭ Step</button>
+            <button id="btn-reset" class="btn btn-warning" title="Reset Book">↺ Reset</button>
+        </div>
+    </header>
+
+    <!-- KPI Ribbon -->
+    <section class="kpi-ribbon">
+        <div class="kpi-card">
+            <span class="kpi-label">Messages Processed</span>
+            <span id="kpi-msgs" class="kpi-val">0</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Active Orders (L3)</span>
+            <span id="kpi-active" class="kpi-val">0</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Best Bid (BBO)</span>
+            <span id="kpi-bid" class="kpi-val" style="color: var(--green-bid);">—</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Best Ask (BBO)</span>
+            <span id="kpi-ask" class="kpi-val" style="color: var(--red-ask);">—</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">BBO Spread</span>
+            <span id="kpi-spread" class="kpi-val" style="color: var(--blue-accent);">—</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Sequence Continuity</span>
+            <span id="kpi-seq" class="kpi-val" style="font-size: 13px;">Framed 0x0000 EOS</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Integrity State</span>
+            <span id="kpi-status" class="status-badge status-valid">
+                <span class="status-dot"></span>VERIFIED (VALID)
+            </span>
+        </div>
+    </section>
+
+    <!-- Main Workspace Grid -->
+    <main class="workspace-grid">
+        <!-- Col 1: Depth Ladder -->
+        <section class="panel">
+            <div class="panel-header">
+                <span>Market Depth (Level 2 Aggregated)</span>
+                <span class="panel-header-badge">Depth Ladder</span>
+            </div>
+            <div class="panel-body ladder-container">
+                <!-- Asks Table (Top) -->
+                <div style="flex: 1; overflow-y: auto;">
+                    <table class="ladder-table">
+                        <thead>
+                            <tr>
+                                <th>Ask Price</th>
+                                <th>Quantity</th>
+                                <th>Orders</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ladder-asks"></tbody>
+                    </table>
+                </div>
+
+                <!-- Spread Bar (Middle) -->
+                <div id="spread-display" class="spread-bar">SPREAD: NO TWO-SIDED QUOTE</div>
+
+                <!-- Bids Table (Bottom) -->
+                <div style="flex: 1; overflow-y: auto;">
+                    <table class="ladder-table">
+                        <thead>
+                            <tr>
+                                <th>Orders</th>
+                                <th>Quantity</th>
+                                <th>Bid Price</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ladder-bids"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Col 2: Tape & Orders -->
+        <div style="display: flex; flex-direction: column; gap: 12px; height: 100%; overflow: hidden;">
+            <!-- Top: Time & Sales Tape -->
+            <section class="panel" style="flex: 1; min-height: 0;">
+                <div class="panel-header">
+                    <span>Time & Sales Tape (Live ITCH 5.0 Events)</span>
+                    <span class="panel-header-badge">Click row to dissect</span>
+                </div>
+                <div class="panel-body">
+                    <table class="tape-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Symbol</th>
+                                <th>Action / Description</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tape-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Bottom: Active Orders L3 Table -->
+            <section class="panel" style="flex: 1; min-height: 0;">
+                <div class="panel-header">
+                    <span>Active Orders (Level 3 Order Book)</span>
+                    <span class="panel-header-badge">Live Active Book</span>
+                </div>
+                <div class="panel-body">
+                    <table class="tape-table">
+                        <thead>
+                            <tr>
+                                <th>Order Ref #</th>
+                                <th>Symbol</th>
+                                <th>Side</th>
+                                <th>Price</th>
+                                <th>Shares</th>
+                                <th>MPID</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- Col 3: Hex Packet Dissector -->
+        <section class="panel">
+            <div class="panel-header">
+                <span>Wire Packet Dissector</span>
+                <span class="panel-header-badge">Byte-Level Inspector</span>
+            </div>
+            <div class="panel-body dissector-container">
+                <div>
+                    <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+                        Raw Wire Hex (Color Coded Fields)
+                    </div>
+                    <div id="hex-box" class="hex-box">
+                        <span style="color: var(--text-muted);">No message selected. Step or play the feed to inspect wire bytes.</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; font-size: 10px; margin-top: 6px; font-family: var(--font-mono); flex-wrap: wrap;">
+                        <span><span class="hex-tag">■</span> Tag</span>
+                        <span><span class="hex-loc">■</span> Locate</span>
+                        <span><span class="hex-ts">■</span> Timestamp</span>
+                        <span><span class="hex-ord">■</span> OrderID</span>
+                        <span><span class="hex-sh">■</span> Shares</span>
+                        <span><span class="hex-px">■</span> Price</span>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+                        Structured Decoded Fields
+                    </div>
+                    <table class="fields-table">
+                        <tbody id="fields-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Scripts -->
+    <script src="protocol.js"></script>
+    <script src="order_book.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+name: FastITCH CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+        build_type: [Debug, Release]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up dependencies
+      run: |
+        sudo apt-get update
+        if [ "${{ matrix.compiler }}" = "clang" ]; then
+          sudo apt-get install -y clang llvm
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
+        else
+          sudo apt-get install -y g++
+          echo "CC=gcc" >> $GITHUB_ENV
+          echo "CXX=g++" >> $GITHUB_ENV
+        fi
+
+    - name: Configure CMake
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DENABLE_SANITIZERS=${{ matrix.build_type == 'Debug' && 'ON' || 'OFF' }} \
+          -DBUILD_TESTING=ON
+
+    - name: Build
+      run: cmake --build build -j$(nproc)
+
+    - name: Generate synthetic test fixtures
+      run: python3 tools/generate_fixtures.py fixtures
+
+    - name: Run CTest
+      run: ctest --test-dir build --output-on-failure
+
+    - name: Run CLI End-to-End Replay
+      run: |
+        ./build/fastitch --input fixtures/synthetic_session.bin --symbol AAPL --summary
+        ./build/fastitch --input fixtures/synthetic_moldudp64.pcap --symbol AAPL --summary
