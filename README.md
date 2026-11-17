@@ -1,5 +1,7 @@
 # FastITCH (QD-02)
 
+[![CI](https://github.com/AnushKamble/FastITCH/actions/workflows/ci.yml/badge.svg)](https://github.com/AnushKamble/FastITCH/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-brightgreen.svg)](https://anushkamble.github.io/FastITCH/)
 [![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
 [![CMake](https://img.shields.io/badge/CMake-3.20%2B-brightgreen.svg)](https://cmake.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -7,6 +9,10 @@
 [![Tests](https://img.shields.io/badge/Tests-72%2F72%20PASS-brightgreen.svg)]()
 
 > High-throughput, bounds-checked NASDAQ TotalView-ITCH 5.0 market-data ingestion and order-book reconstruction engine in modern C++20.
+
+### 🌐 Interactive Web Terminal
+You can run the interactive NASDAQ TotalView-ITCH 5.0 visual terminal directly in your browser:  
+👉 **[Launch FastITCH Web Terminal](https://anushkamble.github.io/FastITCH/)**
 
 ---
 
