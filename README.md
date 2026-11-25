@@ -11,7 +11,7 @@
 > High-throughput, bounds-checked NASDAQ TotalView-ITCH 5.0 market-data ingestion and order-book reconstruction engine in modern C++20.
 
 ### 🌐 Interactive Web Terminal
-You can run the interactive NASDAQ TotalView-ITCH 5.0 visual terminal directly in your browser:  
+You can run the interactive NASDAQ TotalView-ITCH 5.0 visual terminal directly in your browser:
 👉 **[Launch FastITCH Web Terminal](https://anushkamble.github.io/FastITCH/)**
 
 ---

@@ -102,7 +102,7 @@ def main():
     print(f"  API Status:        http://localhost:{port}/api/status")
     print(f"  API Benchmark:     http://localhost:{port}/api/benchmark")
     print(f"============================================================")
-    
+
     server = http.server.ThreadingHTTPServer((HOST, port), FastITCHHandler)
     try:
         server.serve_forever()
